@@ -1,21 +1,22 @@
 class ModelsController < ApplicationController
+  before_filter :parse, only: :index
+  before_filter :select_make, only: :index
+  before_filter :save_models, only: :index
+
   def index
-    #search the models
-    uri = URI("http://www.webmotors.com.br/carro/modelos")
+    @models = Model.where(make_id: @make_id)
+  end
 
-    # Make request for Webmotors site
-    make = Make.where(webmotors_id: params[:webmotors_make_id])[0]
+  private
+  def parse
+    @json = RubyApplicants::Url.new("http://www.webmotors.com.br/carro/modelos").parse({ marca: params[:webmotors_make_id] })
+  end
 
-    response = Net::HTTP.post_form(uri, { marca: params[:webmotors_make_id] })
-    models_json = JSON.parse response.body
+  def select_make
+    @make_id = Make.select(:id).find_by_webmotors_id(params[:webmotors_make_id]).id
+  end
 
-    # debugger
-
-    # Itera no resultado e grava os modelos que ainda não estão persistidas
-    models_json.each do |json|
-      if Model.where(name: json["Nome"], make_id: make.id).size == 0
-        Model.create(make_id: make.id, name: json["Nome"])
-      end
-    end
+  def save_models
+    Model.save_models(@json, @make_id)
   end
 end
