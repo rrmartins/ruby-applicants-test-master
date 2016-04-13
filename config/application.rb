@@ -9,6 +9,8 @@ require "action_controller/railtie"
 require "action_mailer/railtie"
 require "action_view/railtie"
 require "sprockets/railtie"
+
+Dir["./lib/**/*.rb"].sort.each { |f| require f }
 # require "rails/test_unit/railtie"
 
 # Require the gems listed in Gemfile, including any gems
