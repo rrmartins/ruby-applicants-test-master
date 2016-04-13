@@ -1,17 +1,17 @@
 class HomeController < ApplicationController
-  def index
-    #search the make
-    uri = URI("http://www.webmotors.com.br/carro/marcas")
+  before_filter :parse, only: :index
+  before_filter :save_brands, only: :index
 
-    # Make request for Webmotors site
-    response = Net::HTTP.post_form(uri, {})
-    json = JSON.parse response.body
-    json = Url.new("http://www.webmotors.com.br/carro/marcas").parse
-    # Itera no resultado e grava as marcas que ainda não estão persistidas
-    json.each do |make_params|
-      if Make.where(name: make_params["Nome"]).size == 0
-        Make.create(name: make_params["Nome"], webmotors_id: make_params["Id"])
-      end
-    end
+  def index
+    @makes = Make.select(:webmotors_id, :name).all
+  end
+
+  private
+  def parse
+    @json = RubyApplicants::Url.new("http://www.webmotors.com.br/carro/marcas").parse
+  end
+
+  def save_brands
+    Make.save_brands(@json)
   end
 end
